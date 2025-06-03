@@ -1,0 +1,55 @@
+import requests
+from bs4 import BeautifulSoup
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0",
+}
+
+BASE_URL = "https://www.tropacific.com.au"
+SEARCH_URL = BASE_URL + "/search?type=product&q={}"
+
+def scrape(sku: str) -> dict:
+    try:
+        response = requests.get(SEARCH_URL.format(sku), headers=HEADERS, timeout=10)
+        if response.status_code != 200:
+            return _fail(sku, f"Search failed with status {response.status_code}")
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        product_link = soup.select_one("a.full-unstyled-link")
+
+        if not product_link:
+            return _fail(sku, "No product link found")
+
+        product_url = BASE_URL + product_link["href"]
+        product_response = requests.get(product_url, headers=HEADERS, timeout=10)
+        if product_response.status_code != 200:
+            return _fail(sku, f"Product page failed with status {product_response.status_code}")
+
+        product_soup = BeautifulSoup(product_response.text, "html.parser")
+        price_tag = product_soup.select_one("span.price-item--regular")
+
+        if not price_tag:
+            return _fail(sku, "Price not found")
+
+        raw_price = price_tag.get_text(strip=True).replace("$", "")
+        price = float(raw_price)
+
+        return {
+            "supplier": "tropac",
+            "sku": sku,
+            "price": price,
+            "currency": "AUD",
+            "status": "success"
+        }
+
+    except Exception as e:
+        return _fail(sku, f"Exception: {str(e)}")
+
+def _fail(sku, reason):
+    return {
+        "supplier": "tropac",
+        "sku": sku,
+        "price": None,
+        "currency": "AUD",
+        "status": f"fail: {reason}"
+    }

@@ -1,0 +1,30 @@
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Logs and outputs
+logs/
+*.log
+
+# Virtual environments
+venv/
+.env/
+.envrc
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Excel/CSV temp files
+~$*.xlsx
+*.csv
+
+# Credentials or API keys (keep this safe)
+*.key
+*.pem
+secrets.env
+
+# IDE configs
+.vscode/
+.idea/
+*.code-workspace
